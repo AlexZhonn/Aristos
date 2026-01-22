@@ -1,0 +1,220 @@
+import { useState } from "react";
+import { StyleSheet, TouchableOpacity, Image, View, Alert } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
+
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import ParallaxScrollView from "@/components/parallax-scroll-view";
+
+export default function ScannerScreen() {
+  const [image, setImage] = useState<string | null>(null);
+
+  // Function to pick from gallery
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  // Function to take a photo
+  const takePhoto = async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      Alert.alert("Permission to access camera is required!");
+      return;
+    }
+
+    let result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  return (
+    <ParallaxScrollView
+      headerBackgroundColor={{ light: "#A1CEDC", dark: "#000000" }}
+      headerImage={
+        <Ionicons size={310} name="scan-outline" style={styles.headerImage} />
+      }
+    >
+      <ThemedView style={styles.container}>
+        {/* Header Section */}
+        <View style={styles.titleContainer}>
+          <ThemedText type="title">Receipt Scanner</ThemedText>
+          <ThemedText style={styles.subtitle}>
+            Capture or select a receipt to analyze
+          </ThemedText>
+        </View>
+
+        {/* Image Placeholder / Preview Area */}
+        <View style={styles.imageContainer}>
+          {image ? (
+            <Image source={{ uri: image }} style={styles.image} />
+          ) : (
+            <View style={styles.placeholder}>
+              <Ionicons name="receipt-outline" size={64} color="#555" />
+              <ThemedText style={styles.placeholderText}>
+                No receipt selected
+              </ThemedText>
+            </View>
+          )}
+        </View>
+
+        {/* Action Buttons */}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: "#4ADE80" }]} // Green
+            onPress={takePhoto}
+          >
+            <Ionicons
+              name="camera"
+              size={24}
+              color="#fff"
+              style={styles.btnIcon}
+            />
+            <ThemedText style={styles.btnText}>Take Photo</ThemedText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: "#3B82F6" }]} // Blue
+            onPress={pickImage}
+          >
+            <Ionicons
+              name="images"
+              size={24}
+              color="#fff"
+              style={styles.btnIcon}
+            />
+            <ThemedText style={styles.btnText}>Choose from Gallery</ThemedText>
+          </TouchableOpacity>
+        </View>
+
+        {/* Tips Section */}
+        <View style={styles.tipsContainer}>
+          <View style={styles.tipsHeader}>
+            <Ionicons name="bulb-outline" size={20} color="#FFD700" />
+            <ThemedText type="defaultSemiBold" style={styles.tipsTitle}>
+              Tips for Best Results:
+            </ThemedText>
+          </View>
+          <ThemedText style={styles.tipItem}>• Ensure good lighting</ThemedText>
+          <ThemedText style={styles.tipItem}>
+            • Capture entire receipt
+          </ThemedText>
+          <ThemedText style={styles.tipItem}>
+            • Avoid shadows and glare
+          </ThemedText>
+        </View>
+      </ThemedView>
+    </ParallaxScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
+    gap: 24,
+  },
+  headerImage: {
+    color: "#333", // Subtle dark grey for the parallax icon
+    bottom: -90,
+    left: -35,
+    position: "absolute",
+    opacity: 0.2,
+  },
+  titleContainer: {
+    marginTop: 10,
+    alignItems: "flex-start",
+  },
+  subtitle: {
+    color: "#A1A1A1",
+    fontSize: 16,
+    marginTop: 4,
+  },
+  // Image Placeholder Styling
+  imageContainer: {
+    width: "100%",
+    height: 300,
+    borderRadius: 16,
+    overflow: "hidden",
+    marginTop: 10,
+  },
+  placeholder: {
+    flex: 1,
+    backgroundColor: "#1A1A1A", // Dark grey background
+    borderWidth: 2,
+    borderColor: "#333",
+    borderStyle: "dashed",
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  placeholderText: {
+    color: "#555",
+    marginTop: 12,
+    fontSize: 16,
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "contain",
+  },
+  // Button Styling
+  buttonContainer: {
+    gap: 16,
+  },
+  button: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 16,
+    borderRadius: 12,
+    width: "100%",
+  },
+  btnIcon: {
+    marginRight: 8,
+  },
+  btnText: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  // Tips Section Styling
+  tipsContainer: {
+    backgroundColor: "#1A1A1A",
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 8,
+  },
+  tipsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+    gap: 8,
+  },
+  tipsTitle: {
+    fontSize: 16,
+    color: "#fff",
+  },
+  tipItem: {
+    color: "#A1A1A1",
+    fontSize: 14,
+    marginLeft: 4,
+    marginTop: 4,
+  },
+});
