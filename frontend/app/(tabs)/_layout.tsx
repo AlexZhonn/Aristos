@@ -29,18 +29,27 @@ export default function TabLayout() {
       <Tabs.Screen
         name="scanner"
         options={{
-          title: "scanner",
+          title: "Scanner",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="paperplane.fill" color={color} />
+            <IconSymbol size={28} name="camera.fill" color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="pantry"
         options={{
-          title: "pantry",
+          title: "Pantry",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="paperplane.fill" color={color} />
+            <IconSymbol size={28} name="basket.fill" color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="compare"
+        options={{
+          title: "Compare",
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={28} name="chart.bar.fill" color={color} />
           ),
         }}
       />

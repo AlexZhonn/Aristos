@@ -1,14 +1,65 @@
 import { useState } from "react";
-import { StyleSheet, TouchableOpacity, Image, View, Alert } from "react-native";
+import { StyleSheet, TouchableOpacity, Image, View, Alert, ActivityIndicator } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import ParallaxScrollView from "@/components/parallax-scroll-view";
+import { receiptAPI } from "@/services/api";
 
 export default function ScannerScreen() {
   const [image, setImage] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [receiptData, setReceiptData] = useState<any>(null);
+
+  // Convert image to base64
+  const convertToBase64 = async (uri: string): Promise<string> => {
+    try {
+      // For web/development, fetch the image and convert to base64
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error("Error converting to base64:", error);
+      throw error;
+    }
+  };
+
+  // Process receipt with backend
+  const processReceipt = async (imageUri: string) => {
+    try {
+      setIsProcessing(true);
+      const base64Image = await convertToBase64(imageUri);
+      
+      const response = await receiptAPI.upload(base64Image);
+      setReceiptData(response);
+      
+      Alert.alert(
+        "✅ Receipt Processed!",
+        `Found ${response.items?.length || 0} items from ${response.store_name || 'store'}`,
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              // Reset for next scan
+              setImage(null);
+              setReceiptData(null);
+            },
+          },
+        ]
+      );
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "Failed to process receipt");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   // Function to pick from gallery
   const pickImage = async () => {
@@ -16,11 +67,13 @@ export default function ScannerScreen() {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 1,
+      quality: 0.8,
     });
 
     if (!result.canceled) {
-      setImage(result.assets[0].uri);
+      const uri = result.assets[0].uri;
+      setImage(uri);
+      await processReceipt(uri);
     }
   };
 
@@ -36,11 +89,13 @@ export default function ScannerScreen() {
     let result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 1,
+      quality: 0.8,
     });
 
     if (!result.canceled) {
-      setImage(result.assets[0].uri);
+      const uri = result.assets[0].uri;
+      setImage(uri);
+      await processReceipt(uri);
     }
   };
 
@@ -63,7 +118,17 @@ export default function ScannerScreen() {
         {/* Image Placeholder / Preview Area */}
         <View style={styles.imageContainer}>
           {image ? (
-            <Image source={{ uri: image }} style={styles.image} />
+            <>
+              <Image source={{ uri: image }} style={styles.image} />
+              {isProcessing && (
+                <View style={styles.processingOverlay}>
+                  <ActivityIndicator size="large" color="#4ADE80" />
+                  <ThemedText style={styles.processingText}>
+                    Processing Receipt...
+                  </ThemedText>
+                </View>
+              )}
+            </>
           ) : (
             <View style={styles.placeholder}>
               <Ionicons name="receipt-outline" size={64} color="#555" />
@@ -79,6 +144,7 @@ export default function ScannerScreen() {
           <TouchableOpacity
             style={[styles.button, { backgroundColor: "#4ADE80" }]} // Green
             onPress={takePhoto}
+            disabled={isProcessing}
           >
             <Ionicons
               name="camera"
@@ -92,6 +158,7 @@ export default function ScannerScreen() {
           <TouchableOpacity
             style={[styles.button, { backgroundColor: "#3B82F6" }]} // Blue
             onPress={pickImage}
+            disabled={isProcessing}
           >
             <Ionicons
               name="images"
@@ -216,5 +283,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginLeft: 4,
     marginTop: 4,
+  },
+  processingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 16,
+  },
+  processingText: {
+    color: "#fff",
+    marginTop: 16,
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

@@ -1,0 +1,38 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Backend
+backend/__pycache__/
+backend/venv/
+backend/env/
+backend/.pytest_cache/
+backend/firebase-credentials.json
+backend/*.pyc
+backend/*.pyo
+backend/*.egg-info/
+
+# Frontend
+frontend/node_modules/
+frontend/.expo/
+frontend/dist/
+frontend/.expo-shared/
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# OS
+Thumbs.db
